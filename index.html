@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Tuberculose – Saúde Coletiva</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:       #C0152A;
+    --red-dark:  #8B0E1E;
+    --red-light: #E8293F;
+    --pink:      #F4729A;
+    --pink-pale: #FFF0F3;
+    --white:     #FFFFFF;
+    --off-white: #FFF8F9;
+    --gray:      #6B6B6B;
+    --gray-light:#F5F5F5;
+    --text:      #1A1A1A;
+    --shadow:    0 8px 32px rgba(192,21,42,.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--off-white);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 0%,   rgba(244,114,154,.13) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(192,21,42,.08)   0%, transparent 55%);
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 55%, var(--red-light) 100%);
+    color: var(--white);
+    text-align: center;
+    padding: 28px 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content:''; position:absolute; top:-40px; right:-40px;
+    width:180px; height:180px; border-radius:50%;
+    background: rgba(255,255,255,.07);
+  }
+  .header h1 { font-family:'Playfair Display',serif; font-size:clamp(1.6rem,4vw,2.4rem); }
+  .header p  { font-size:.9rem; opacity:.85; margin-top:4px; }
+
+  #progress-wrap {
+    background:rgba(255,255,255,.2); height:6px; margin-top:14px;
+    border-radius:3px; overflow:hidden; max-width:600px; margin-left:auto; margin-right:auto;
+  }
+  #progress-fill {
+    height:100%; width:0%;
+    background: #FADADD;
+    border-radius:3px; transition:width .5s ease;
+  }
+
+  .container { max-width:700px; margin:0 auto; padding:24px 16px 48px; }
+
+  .card {
+    background:var(--white); border-radius:20px; padding:32px 28px;
+    box-shadow:var(--shadow); animation:fadeUp .45s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* START */
+  .logo-icon { font-size:3.5rem; text-align:center; margin-bottom:16px; display:block; }
+  #screen-start h2 {
+    font-family:'Playfair Display',serif; font-size:1.7rem;
+    color:var(--red-dark); text-align:center; margin-bottom:8px;
+  }
+  #screen-start p { text-align:center; color:var(--gray); font-size:.92rem; margin-bottom:24px; line-height:1.6; }
+
+  .rules-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+  .rule-item {
+    background:var(--pink-pale); border-radius:12px; padding:12px 14px;
+    font-size:.82rem; color:var(--red-dark); line-height:1.5; border-left:3px solid var(--pink);
+  }
+  .rule-item strong { display:block; font-size:.88rem; }
+
+  label.field-label { display:block; font-weight:600; font-size:.9rem; color:var(--red-dark); margin-bottom:6px; }
+  input[type="text"] {
+    width:100%; border:2px solid #EAC0C8; border-radius:12px;
+    padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:1rem;
+    outline:none; transition:border-color .2s;
+  }
+  input[type="text"]:focus { border-color:var(--red); }
+
+  .btn {
+    display:block; width:100%; padding:14px; border:none; border-radius:14px;
+    font-family:'DM Sans',sans-serif; font-size:1.05rem; font-weight:700;
+    cursor:pointer; transition:transform .15s, box-shadow .15s;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn-primary {
+    background:linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    color:var(--white); box-shadow:0 4px 18px rgba(192,21,42,.35); margin-top:18px;
+  }
+  .btn-primary:hover { box-shadow:0 6px 22px rgba(192,21,42,.45); }
+
+  /* QUIZ */
+  #screen-quiz { display:none; }
+  .quiz-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+  .badge { background:var(--pink-pale); color:var(--red-dark); border-radius:20px; padding:5px 14px; font-size:.82rem; font-weight:600; }
+  .badge-score { background:var(--red); color:var(--white); border-radius:20px; padding:5px 14px; font-size:.88rem; font-weight:700; }
+  .streak-info { font-size:.78rem; color:var(--gray); text-align:center; width:100%; min-height:16px; }
+
+  #timer-wrap { background:#F0E0E3; border-radius:6px; height:10px; margin-bottom:18px; overflow:hidden; }
+  #timer-fill {
+    height:100%; width:100%;
+    background:linear-gradient(90deg, var(--red), var(--pink));
+    border-radius:6px; transition:width .25s linear, background .5s;
+  }
+
+  .question-text {
+    font-family:'Playfair Display',serif; font-size:1.12rem; font-weight:700;
+    color:var(--red-dark); line-height:1.55; margin-bottom:20px;
+  }
+  .options-grid { display:grid; gap:10px; }
+  .opt-btn {
+    width:100%; padding:13px 16px; text-align:left;
+    border:2px solid #EAC0C8; border-radius:14px; background:var(--white);
+    font-family:'DM Sans',sans-serif; font-size:.95rem; cursor:pointer; transition:all .2s;
+  }
+  .opt-btn:hover:not(:disabled) { border-color:var(--red); background:var(--pink-pale); transform:translateX(4px); }
+  .opt-btn.correct { background:#E8F5E9; border-color:#43A047; color:#1B5E20; font-weight:600; }
+  .opt-btn.wrong   { background:#FFEBEE; border-color:#E53935; color:#B71C1C; }
+  .opt-btn:disabled { cursor:default; }
+
+  .feedback-msg {
+    text-align:center; font-weight:700; font-size:1rem;
+    padding:10px; border-radius:10px; margin-top:14px; display:none;
+  }
+  .feedback-msg.show { display:block; }
+  .feedback-msg.ok   { background:#E8F5E9; color:#2E7D32; }
+  .feedback-msg.fail { background:#FFEBEE; color:#C62828; }
+
+  .btn-next {
+    background:linear-gradient(135deg, var(--pink) 0%, var(--red) 100%);
+    color:var(--white); box-shadow:0 4px 14px rgba(192,21,42,.3);
+    margin-top:16px; display:none;
+  }
+  .btn-next.show { display:block; }
+
+  /* COMBO POP */
+  #combo-pop {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%) scale(0);
+    background:linear-gradient(135deg,var(--red),var(--pink));
+    color:var(--white); border-radius:20px; padding:20px 36px;
+    font-family:'Playfair Display',serif; font-size:1.5rem;
+    text-align:center; z-index:999; pointer-events:none;
+    transition:transform .3s cubic-bezier(.175,.885,.32,1.275), opacity .3s;
+    opacity:0;
+  }
+  #combo-pop.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
+
+  /* RESULT */
+  #screen-result { display:none; }
+  #screen-result h2 { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--red-dark); text-align:center; margin-bottom:8px; }
+  .final-score { text-align:center; font-size:3rem; font-weight:900; color:var(--red); margin:10px 0; }
+  .final-stats { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin:16px 0 24px; }
+  .stat-pill { background:var(--pink-pale); color:var(--red-dark); padding:8px 18px; border-radius:20px; font-size:.88rem; font-weight:600; }
+
+  .ranking-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--red-dark); margin-bottom:14px; text-align:center; }
+  #ranking-list { list-style:none; }
+  #ranking-list li {
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    border-radius:12px; margin-bottom:8px; background:var(--gray-light); font-size:.9rem;
+  }
+  #ranking-list li.rank-1 { background:linear-gradient(90deg,#FFF9C4,#FFF3CD); }
+  #ranking-list li.rank-2 { background:linear-gradient(90deg,#F5F5F5,#ECECEC); }
+  #ranking-list li.rank-3 { background:linear-gradient(90deg,#FFF3E0,#FFE0B2); }
+  .rank-pos  { font-weight:700; font-size:1rem; min-width:32px; text-align:center; }
+  .rank-name { flex:1; font-weight:600; }
+  .rank-pts  { font-weight:700; color:var(--red); }
+  .rank-info { font-size:.75rem; color:var(--gray); white-space:nowrap; }
+
+  .send-status { text-align:center; font-size:.85rem; margin-top:10px; color:var(--gray); min-height:20px; }
+
+  @media(max-width:480px){
+    .card { padding:22px 16px; }
+    .rules-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🫁 Quiz — Tuberculose</h1>
+  <p>Saúde Coletiva · Enfermagem 2026</p>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</div>
+
+<div id="combo-pop">🔥 COMBO x1.5<br><small>5 acertos seguidos!</small></div>
+
+<div class="container">
+
+  <!-- TELA INICIAL -->
+  <div class="card" id="screen-start">
+    <span class="logo-icon">🎯</span>
+    <h2>Bem-vindo ao Quiz!</h2>
+    <p>30 questões de média-alta complexidade sobre Tuberculose.<br>Quanto mais rápido e certeiro, maior sua pontuação!</p>
+    <div class="rules-grid">
+      <div class="rule-item"><strong>⏱ Velocidade</strong>Respostas rápidas valem mais pontos (até 100 pts)</div>
+      <div class="rule-item"><strong>🔥 Combo</strong>5 acertos seguidos = bônus +50% na questão</div>
+      <div class="rule-item"><strong>📉 Penalidade</strong>3 erros seguidos = -30 pts acumulados</div>
+      <div class="rule-item"><strong>🏆 Ranking</strong>Seu resultado entra no placar da turma</div>
+    </div>
+    <label class="field-label" for="student-name">✏️ Seu nome completo</label>
+    <input type="text" id="student-name" placeholder="Digite seu nome..." maxlength="60" autocomplete="off">
+    <button class="btn btn-primary" onclick="startQuiz()">Iniciar Quiz →</button>
+  </div>
+
+  <!-- TELA QUIZ -->
+  <div class="card" id="screen-quiz">
+    <div class="quiz-meta">
+      <span class="badge" id="q-counter">Questão 1 / 30</span>
+      <span class="badge-score" id="score-display">0 pts</span>
+    </div>
+    <div class="streak-info" id="streak-info"></div>
+    <div id="timer-wrap"><div id="timer-fill"></div></div>
+    <div class="question-text" id="question-text"></div>
+    <div class="options-grid" id="options-grid"></div>
+    <div class="feedback-msg" id="feedback-msg"></div>
+    <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Próxima →</button>
+  </div>
+
+  <!-- TELA RESULTADO -->
+  <div class="card" id="screen-result">
+    <h2>🎉 Quiz Concluído!</h2>
+    <div class="final-score" id="final-score-val">0 pts</div>
+    <div class="final-stats">
+      <span class="stat-pill" id="stat-correct">✅ 0 acertos</span>
+      <span class="stat-pill" id="stat-wrong">❌ 0 erros</span>
+      <span class="stat-pill" id="stat-avg">⏱ 0s médio</span>
+    </div>
+    <div class="ranking-title">🏆 Ranking da Turma</div>
+    <ul id="ranking-list"><li style="text-align:center;color:var(--gray);padding:16px">Carregando ranking…</li></ul>
+    <p class="send-status" id="send-status"></p>
+    <button class="btn btn-primary" style="margin-top:20px" onclick="restartQuiz()">↩ Jogar Novamente</button>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// URL DO GOOGLE APPS SCRIPT
+// ══════════════════════════════════════════
+const APPS_URL = "https://script.google.com/macros/s/AKfycbzL8LmtPB1d1FrP87vmun4B90Taje5Jij8eJqafcqqdm6pohbD9QZBt3vyiGYuf4bU/exec";
+
+// ══════════════════════════════════════════
+// QUESTÕES
+// ══════════════════════════════════════════
+const QUESTIONS = [
+  { q:"O agente etiológico da tuberculose é:", opts:["Streptococcus pneumoniae","Mycobacterium tuberculosis","Klebsiella pneumoniae","Cryptococcus neoformans"], ans:1 },
+  { q:"A tuberculose é transmitida exclusivamente por qual via?", opts:["Via oral-fecal","Via cutânea","Via aérea (aerossóis)","Contato com fômites"], ans:2 },
+  { q:"Qual a principal forma clínica da tuberculose, responsável por ~85% dos casos?", opts:["TB pleural","TB ganglionar","TB pulmonar","TB miliar"], ans:2 },
+  { q:"Na tuberculose latente, o indivíduo:", opts:["Transmite a doença ativamente","Apresenta tosse e febre","É assintomático e NÃO transmite","Necessita do esquema RHZE imediato"], ans:2 },
+  { q:"O Sintomático Respiratório é definido por tosse com duração mínima de:", opts:["1 semana","2 semanas","3 semanas","4 semanas"], ans:2 },
+  { q:"Qual exame é o padrão-ouro inicial para diagnóstico da TB pulmonar?", opts:["Tomografia torácica","Baciloscopia de escarro","Teste tuberculínico (PPD)","Cultura de sangue"], ans:1 },
+  { q:"O esquema básico de tratamento da TB é representado pela sigla:", opts:["RHZE","AMOX","CIPRO","RIPE"], ans:0 },
+  { q:"Qual a duração total do tratamento padrão da tuberculose em adultos?", opts:["3 meses","6 meses","9 meses","12 meses"], ans:1 },
+  { q:"A fase intensiva do tratamento (RHZE) dura:", opts:["1 mês","2 meses","3 meses","4 meses"], ans:1 },
+  { q:"Na TB meningoencefálica, o esquema de tratamento prolonga-se por:", opts:["6 meses","9 meses","12 meses","18 meses"], ans:2 },
+  { q:"O efeito adverso GRAVE característico do Etambutol é:", opts:["Neuropatia periférica","Hepatotoxicidade","Neurite óptica","Hiperuricemia"], ans:2 },
+  { q:"Qual fármaco do esquema RHZE causa coloração alaranjada da urina?", opts:["Isoniazida","Rifampicina","Pirazinamida","Etambutol"], ans:1 },
+  { q:"O TDO tem como principal objetivo:", opts:["Reduzir custos hospitalares","Garantir adesão e prevenir resistência","Aumentar dose dos fármacos","Substituir o exame de escarro"], ans:1 },
+  { q:"A tuberculose é de notificação compulsória; o registro deve ocorrer em até:", opts:["6 horas","12 horas","24 horas","48 horas"], ans:2 },
+  { q:"A vacina BCG protege principalmente contra qual forma de TB em crianças?", opts:["TB pulmonar em adultos","TB miliar e meningite tuberculosa","TB ganglionar em idosos","TB pleural resistente"], ans:1 },
+  { q:"O PPD ≥ 10 mm em adulto imunocompetente indica:", opts:["Ausência de infecção pelo M. tuberculosis","Vacinação BCG recente como única explicação","Infecção pelo M. tuberculosis ou BCG há mais de 2 anos","Imunossupressão grave"], ans:2 },
+  { q:"A TB miliar se caracteriza por:", opts:["Infecção restrita aos pulmões","Disseminação hematogênica para múltiplos órgãos","Comprometimento exclusivo da pleura","Lesão isolada da coluna vertebral"], ans:1 },
+  { q:"Qual condição é fator de MAIOR risco para reativação da tuberculose latente?", opts:["Hipertensão arterial","Diabetes tipo 2 controlado","Coinfecção pelo HIV","Dislipidemia"], ans:2 },
+  { q:"O tratamento da infecção latente (ILTB) utiliza:", opts:["Rifampicina por 4 meses","Isoniazida por 6 meses","RHZE por 2 meses","Etambutol por 9 meses"], ans:1 },
+  { q:"A meningite tuberculosa é considerada:", opts:["Uma urgência clínica com risco de sequelas graves","Uma forma leve que regride espontaneamente","Exclusiva de crianças vacinadas com BCG","A forma mais frequente de TB extrapulmonar"], ans:0 },
+  { q:"O Mal de Pott é a tuberculose que acomete:", opts:["Rins e bexiga","Coluna vertebral e articulações","Gânglios cervicais","Intestino delgado"], ans:1 },
+  { q:"Em qual população a TB extrapulmonar é mais frequente?", opts:["Crianças saudáveis","Adultos sem comorbidades","Imunossuprimidos (ex.: HIV+)","Idosos vacinados"], ans:2 },
+  { q:"Qual conduta é OBRIGATÓRIA ao diagnosticar tuberculose?", opts:["Solicitar ecocardiograma","Oferecer sorologia anti-HIV","Iniciar corticosteroide sistêmico","Hospitalizar o paciente"], ans:1 },
+  { q:"A principal responsabilidade do enfermeiro na identificação do Sintomático Respiratório é:", opts:["Prescrever o esquema RHZE","Realizar busca ativa e encaminhar para baciloscopia","Interpretar a tomografia torácica","Solicitar biópsia de linfonodo"], ans:1 },
+  { q:"A Pirazinamida (Z) é responsável principalmente por qual efeito adverso grave?", opts:["Neurite óptica","Neuropatia periférica","Hepatotoxicidade e hiperuricemia","Coloração alaranjada da urina"], ans:2 },
+  { q:"Qual medida ambiental natural elimina o bacilo de Koch?", opts:["Umidade elevada","Luz solar direta","Ventilação com ar frio","Superfícies frias"], ans:1 },
+  { q:"A fase de manutenção do esquema RHZE utiliza apenas:", opts:["RH (Rifampicina + Isoniazida)","RZ (Rifampicina + Pirazinamida)","HE (Isoniazida + Etambutol)","ZE (Pirazinamida + Etambutol)"], ans:0 },
+  { q:"O granuloma (tubérculo) formado na patogênese da TB tem a função de:", opts:["Eliminar imediatamente os bacilos","Encapsular o bacilo e conter a infecção","Produzir anticorpos específicos anti-BAAR","Facilitar a disseminação hematogênica"], ans:1 },
+  { q:"O sinal clínico MAIS característico da TB ativa é:", opts:["Tosse seca por 1 semana","Febre vespertina com emagrecimento e sudorese noturna","Dor pleurítica intensa","Hemoptise volumosa isolada"], ans:1 },
+  { q:"Qual sistema de informação o enfermeiro usa para notificar casos de TB?", opts:["DATASUS","e-SUS","SINAN","CadSUS"], ans:2 },
+];
+
+// ══════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════
+let studentName = "";
+let currentQ    = 0;
+let score       = 0;
+let correctStreak = 0;
+let wrongStreak   = 0;
+let penaltyActive = false;
+let correctCount  = 0;
+let wrongCount    = 0;
+let questionTimes = [];
+let answerGiven   = false;
+let timerInterval = null;
+let timeLeft      = 40;
+let qStartTime    = 0;
+
+const TOTAL_TIME = 40;
+
+// ══════════════════════════════════════════
+// FUNÇÕES DO QUIZ
+// ══════════════════════════════════════════
+function startQuiz() {
+  studentName = document.getElementById("student-name").value.trim();
+  if (!studentName) { alert("Por favor, insira seu nome!"); return; }
+
+  // reset estado
+  currentQ = 0; score = 0;
+  correctStreak = 0; wrongStreak = 0; penaltyActive = false;
+  correctCount = 0; wrongCount = 0; questionTimes = [];
+
+  document.getElementById("screen-start").style.display = "none";
+  document.getElementById("screen-quiz").style.display  = "block";
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answerGiven = false;
+  const q = QUESTIONS[currentQ];
+
+  document.getElementById("q-counter").textContent     = `Questão ${currentQ+1} / 30`;
+  document.getElementById("score-display").textContent  = `${score} pts`;
+  document.getElementById("progress-fill").style.width  = `${(currentQ/30)*100}%`;
+  document.getElementById("question-text").textContent  = `${currentQ+1}. ${q.q}`;
+
+  // Streak info
+  const si = document.getElementById("streak-info");
+  if (correctStreak >= 3) si.textContent = `🔥 Sequência de ${correctStreak} acertos!`;
+  else if (wrongStreak >= 2) si.textContent = `⚠️ ${wrongStreak} erros seguidos`;
+  else si.textContent = "";
+
+  // Opções
+  const grid = document.getElementById("options-grid");
+  grid.innerHTML = "";
+  ["A","B","C","D"].forEach((lbl, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<strong>${lbl}.</strong> ${q.opts[i]}`;
+    btn.onclick = () => handleAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById("feedback-msg").className = "feedback-msg";
+  document.getElementById("btn-next").className      = "btn btn-next";
+
+  startTimer();
+}
+
+function startTimer() {
+  timeLeft = TOTAL_TIME;
+  qStartTime = Date.now();
+  clearInterval(timerInterval);
+
+  const fill = document.getElementById("timer-fill");
+  fill.style.width      = "100%";
+  fill.style.background = "linear-gradient(90deg, var(--red), var(--pink))";
+
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.25;
+    const pct = Math.max(0, (timeLeft / TOTAL_TIME) * 100);
+    fill.style.width = pct + "%";
+    if (pct < 30) fill.style.background = "#E53935";
+    if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeout(); }
+  }, 250);
+}
+
+function handleTimeout() {
+  if (answerGiven) return;
+  answerGiven = true;
+  const q = QUESTIONS[currentQ];
+  document.querySelectorAll(".opt-btn").forEach((b,i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add("correct");
+  });
+  wrongStreak++; correctStreak = 0;
+  if (wrongStreak >= 3) { penaltyActive = true; score = Math.max(0, score - 30); }
+  wrongCount++;
+  questionTimes.push(TOTAL_TIME);
+  showFeedback(false, "⏰ Tempo esgotado!");
+  document.getElementById("score-display").textContent = `${score} pts`;
+  document.getElementById("btn-next").className = "btn btn-next show";
+}
+
+function handleAnswer(idx, btn) {
+  if (answerGiven) return;
+  answerGiven = true;
+  clearInterval(timerInterval);
+
+  const elapsed = (Date.now() - qStartTime) / 1000;
+  questionTimes.push(elapsed);
+
+  const q = QUESTIONS[currentQ];
+  document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
+
+  if (idx === q.ans) {
+    btn.classList.add("correct");
+    correctStreak++; wrongStreak = 0; penaltyActive = false;
+
+    let pts = Math.max(10, Math.round(100 * (timeLeft / TOTAL_TIME)));
+    if (correctStreak >= 5) { pts = Math.round(pts * 1.5); showComboPop(); }
+    if (penaltyActive) pts = Math.round(pts * 0.7);
+
+    score += pts;
+    correctCount++;
+    showFeedback(true, `✅ Correto! +${pts} pts`);
+  } else {
+    btn.classList.add("wrong");
+    document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
+    wrongStreak++; correctStreak = 0;
+    if (wrongStreak >= 3) { penaltyActive = true; score = Math.max(0, score - 30); }
+    wrongCount++;
+    showFeedback(false, `❌ Errado! Correta: ${"ABCD"[q.ans]}.`);
+  }
+
+  document.getElementById("score-display").textContent = `${score} pts`;
+  document.getElementById("btn-next").className = "btn btn-next show";
+}
+
+function showFeedback(ok, msg) {
+  const el = document.getElementById("feedback-msg");
+  el.textContent = msg;
+  el.className   = "feedback-msg show " + (ok ? "ok" : "fail");
+}
+
+function showComboPop() {
+  const pop = document.getElementById("combo-pop");
+  pop.className = "show";
+  setTimeout(() => { pop.className = ""; }, 1800);
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= 30) finishQuiz();
+  else renderQuestion();
+}
+
+function finishQuiz() {
+  clearInterval(timerInterval);
+  document.getElementById("screen-quiz").style.display   = "none";
+  document.getElementById("screen-result").style.display = "block";
+  document.getElementById("progress-fill").style.width   = "100%";
+
+  document.getElementById("final-score-val").textContent = `${score} pts`;
+  document.getElementById("stat-correct").textContent    = `✅ ${correctCount} acertos`;
+  document.getElementById("stat-wrong").textContent      = `❌ ${wrongCount} erros`;
+  const avg = questionTimes.length
+    ? (questionTimes.reduce((a,b)=>a+b,0)/questionTimes.length).toFixed(1)
+    : "0";
+  document.getElementById("stat-avg").textContent = `⏱ ${avg}s médio`;
+
+  enviarResultado();
+}
+
+// ══════════════════════════════════════════
+// ENVIO PARA O GOOGLE SHEETS
+// Técnica: imagem 1x1 pixel (GET sem CORS)
+// ══════════════════════════════════════════
+function enviarResultado() {
+  const now  = new Date();
+  const date = now.toLocaleDateString("pt-BR");
+  const time = now.toLocaleTimeString("pt-BR");
+
+  document.getElementById("send-status").textContent = "📤 Enviando resultado…";
+
+  const params = new URLSearchParams({
+    action:  "save",
+    name:    studentName,
+    score:   score,
+    correct: correctCount,
+    wrong:   wrongCount,
+    date:    date,
+    time:    time
+  });
+
+  const url = APPS_URL + "?" + params.toString();
+
+  // Usa elemento Image — dispara GET sem bloqueio de CORS
+  const img = new Image();
+
+  img.onload = () => {
+    document.getElementById("send-status").textContent = "✅ Resultado registrado!";
+    setTimeout(carregarRanking, 1500);
+  };
+
+  img.onerror = () => {
+    // onerror também significa que o servidor respondeu (redirecionamento do Apps Script)
+    // então consideramos enviado com sucesso
+    document.getElementById("send-status").textContent = "✅ Resultado registrado!";
+    setTimeout(carregarRanking, 1500);
+  };
+
+  img.src = url;
+}
+
+function carregarRanking() {
+  const url = APPS_URL + "?action=ranking&t=" + Date.now();
+
+  fetch(url)
+    .then(r => r.json())
+    .then(dados => renderRanking(dados))
+    .catch(() => {
+      // Se não conseguir buscar, mostra só o resultado atual
+      renderRanking([{
+        name: studentName, score: score,
+        correct: correctCount, wrong: wrongCount,
+        date: new Date().toLocaleDateString("pt-BR"),
+        time: new Date().toLocaleTimeString("pt-BR")
+      }]);
+    });
+}
+
+function renderRanking(dados) {
+  dados.sort((a,b) => b.score - a.score);
+  const ul = document.getElementById("ranking-list");
+  ul.innerHTML = "";
+
+  dados.forEach((r, i) => {
+    const pos  = i + 1;
+    const li   = document.createElement("li");
+    if (pos <= 3) li.classList.add("rank-" + pos);
+
+    const estrelas = pos === 1 ? " ⭐⭐⭐" : pos === 2 ? " ⭐⭐" : pos === 3 ? " ⭐" : "";
+    const destaque = r.name === studentName ? " 👈" : "";
+
+    li.innerHTML = `
+      <span class="rank-pos">${pos}${estrelas}</span>
+      <span class="rank-name">${r.name}${destaque}</span>
+      <span class="rank-pts">${r.score} pts</span>
+      <span class="rank-info">${r.correct ?? ""}✅ · ${r.date ?? ""}</span>`;
+    ul.appendChild(li);
+  });
+}
+
+function restartQuiz() {
+  document.getElementById("screen-result").style.display = "none";
+  document.getElementById("screen-start").style.display  = "block";
+  document.getElementById("student-name").value = "";
+  document.getElementById("progress-fill").style.width = "0%";
+  document.getElementById("send-status").textContent = "";
+}
+</script>
+</body>
+</html>
